@@ -1,50 +1,45 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static('public'));
 
-// Replace your old local mongoose.connect with this:
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// MongoDB Atlas Connection (Ensure YOUR link is here)
 const dbURI = "mongodb+srv://pritesh:<db_password>@priteshpatel.nc4ihda.mongodb.net/?appName=priteshpatel";
-
 mongoose.connect(dbURI)
-    .then(() => console.log("✅ Connected to MongoDB Atlas (Cloud)"))
-    .catch(err => console.log("❌ Connection Error: ", err));
+    .then(() => console.log("✅ MongoDB Atlas Connected"))
+    .catch(err => console.log("❌ DB Error: ", err));
+
 const Product = mongoose.model('Products', { 
-    name: String, 
-    category: String, 
-    price: Number,
-    description: String
+    name: String, category: String, price: Number, description: String 
 });
 
-// GET all products
+// API Routes
 app.get('/api/products', async (req, res) => {
-    res.json(await Product.find());
+    try { res.json(await Product.find()); } 
+    catch (e) { res.status(500).send(e); }
 });
 
-// POST new product
 app.post('/api/products', async (req, res) => {
-    await new Product(req.body).save();
-    res.send("Product Added");
+    try { await new Product(req.body).save(); res.send("Saved"); } 
+    catch (e) { res.status(500).send(e); }
 });
 
-// PUT update product
-app.put('/api/products/:id', async (req, res) => {
-    await Product.findByIdAndUpdate(req.params.id, req.body);
-    res.send("Product Updated");
-});
-
-// DELETE product
 app.delete('/api/products/:id', async (req, res) => {
     await Product.findByIdAndDelete(req.params.id);
-    res.send("Product Deleted");
+    res.send("Deleted");
 });
 
-app.listen(3000, () => {
-    console.log("-----------------------------------------");
-    console.log("Product Dashboard: http://localhost:3000");
-    console.log("-----------------------------------------");
+// CRITICAL: This sends index.html for any other request (Fixes 404)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`http://localhost:${PORT} 🚀`));
