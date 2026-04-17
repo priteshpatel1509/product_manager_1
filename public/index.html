@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html ng-app="productApp">
+<head>
+    <title>Product Dashboard</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #eef1f7; padding: 20px; }
+        .dashboard { max-width: 1000px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: #f8f9fa; padding: 20px; border-bottom: 1px solid #ddd; font-size: 24px; color: #444; }
+        .content { display: flex; padding: 20px; }
+        .list-section { flex: 2; padding-right: 20px; }
+        .form-section { flex: 1; background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #5a7d9a; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        input, textarea { width: 92%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; }
+        .btn-add { background: #28a745; color: white; border: none; width: 100%; padding: 10px; cursor: pointer; margin-bottom: 5px; }
+        .btn-upd { background: #ffc107; color: black; border: none; width: 100%; padding: 10px; cursor: pointer; }
+        .btn-del { background: #dc3545; color: white; border: none; padding: 5px 8px; cursor: pointer; }
+        .btn-edit { background: #007bff; color: white; border: none; padding: 5px 8px; cursor: pointer; }
+    </style>
+</head>
+<body ng-controller="ProdCtrl">
+
+<div class="dashboard">
+    <div class="header">📋 Product Management Dashboard</div>
+    
+    <div class="content">
+        <div class="list-section">
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+                <tr ng-repeat="p in products">
+                    <td>{{p.name}}</td>
+                    <td>{{p.category}}</td>
+                    <td>₹{{p.price}}</td> <td>
+                        <button class="btn-edit" ng-click="selectProduct(p)">Edit</button>
+                        <button class="btn-del" ng-click="deleteProduct(p._id)">Delete</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="form-section">
+            <h4>{{ isEditing ? 'Update Product' : 'Add New Product' }}</h4>
+            <input type="text" ng-model="newProd.name" placeholder="Product Name">
+            <input type="text" ng-model="newProd.category" placeholder="Category">
+            <input type="number" ng-model="newProd.price" placeholder="Price (₹)">
+            <textarea ng-model="newProd.description" placeholder="Description"></textarea>
+            
+            <button class="btn-add" ng-if="!isEditing" ng-click="addProduct()">Add Product</button>
+            <div ng-if="isEditing">
+                <button class="btn-upd" ng-click="updateProduct()">Update Product</button>
+                <button style="width:100%; margin-top:5px;" ng-click="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    angular.module('productApp', []).controller('ProdCtrl', function($scope, $http) {
+        $scope.isEditing = false;
+
+        $scope.getProducts = () => {
+            $http.get('/api/products').then(res => $scope.products = res.data);
+        };
+
+        $scope.addProduct = () => {
+            $http.post('/api/products', $scope.newProd).then(() => {
+                $scope.newProd = {}; 
+                $scope.getProducts();
+            });
+        };
+
+        // Fill form for editing
+        $scope.selectProduct = (p) => {
+            $scope.isEditing = true;
+            $scope.newProd = angular.copy(p); // Copy data to form
+        };
+
+        $scope.updateProduct = () => {
+            $http.put('/api/products/' + $scope.newProd._id, $scope.newProd).then(() => {
+                $scope.cancelEdit();
+                $scope.getProducts();
+            });
+        };
+
+        $scope.deleteProduct = (id) => {
+            if(confirm("Delete product?")) {
+                $http.delete('/api/products/' + id).then(() => $scope.getProducts());
+            }
+        };
+
+        $scope.cancelEdit = () => {
+            $scope.isEditing = false;
+            $scope.newProd = {};
+        };
+
+        $scope.getProducts();
+    });
+</script>
+
+</body>
+</html>
