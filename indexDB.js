@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Atlas Connection (Ensure YOUR link is here)
-const dbURI = "mongodb+srv://pritesh:<db_password>@priteshpatel.nc4ihda.mongodb.net/?appName=priteshpatel";
+const dbURI = "mongodb+srv://pritesh:pritesh123@priteshpatel.nc4ihda.mongodb.net/?appName=priteshpatel";
 mongoose.connect(dbURI)
     .then(() => console.log("✅ MongoDB Atlas Connected"))
     .catch(err => console.log("❌ DB Error: ", err));
